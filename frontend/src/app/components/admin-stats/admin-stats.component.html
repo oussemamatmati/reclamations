@@ -1,0 +1,516 @@
+<div class="stats-page" *ngIf="!isLoading; else loadingTpl">
+
+  <!-- ===== Page Header ===== -->
+  <div class="page-header">
+    <div>
+      <h1>Statistiques & Analytiques</h1>
+      <p class="subtitle">Analyse Data Analyst & indicateurs de performance clés (KPI)</p>
+    </div>
+    
+    <div class="header-right-group">
+      <!-- Data Analyst Export Suite -->
+      <div class="export-suite">
+        <button type="button" class="btn-export-suite csv" (click)="exportCsv()" title="Télécharger les données filtrées au format CSV (Excel)">
+          <span class="material-icons">table_chart</span> CSV
+        </button>
+        <button type="button" class="btn-export-suite json" (click)="exportJson()" title="Télécharger les données brutes JSON">
+          <span class="material-icons">code</span> JSON
+        </button>
+        <button type="button" class="btn-export-suite pdf" (click)="exportPdfReport()" title="Générer un Rapport PDF d'Analyse">
+          <span class="material-icons">picture_as_pdf</span> Rapport PDF
+        </button>
+      </div>
+
+      <div class="header-badge">
+        <span class="material-icons">analytics</span>
+        Mode Data Analyst
+      </div>
+    </div>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="errorMessage">
+    <span class="material-icons">error</span> {{ errorMessage }}
+  </div>
+
+  <!-- ===== Date Range & Filter Bar (Filtres Temporels selon Date) ===== -->
+  <div class="glass-card date-filter-card">
+    <div class="filter-header-row">
+      <div class="filter-title-group">
+        <span class="material-icons filter-icon">date_range</span>
+        <span class="filter-title">Filtres Temporels & Période</span>
+      </div>
+      <div class="filter-summary-pill">
+        <span class="material-icons">info</span>
+        <span>{{ totalFilteredCount }} réclamations incluses</span>
+      </div>
+    </div>
+
+    <div class="filter-controls-row">
+      <!-- Quick Presets -->
+      <div class="preset-buttons">
+        <button type="button" class="preset-btn" [class.active]="selectedPreset === 'ALL'" (click)="selectPreset('ALL')">
+          Toutes
+        </button>
+        <button type="button" class="preset-btn" [class.active]="selectedPreset === '7D'" (click)="selectPreset('7D')">
+          7 Jours
+        </button>
+        <button type="button" class="preset-btn" [class.active]="selectedPreset === '30D'" (click)="selectPreset('30D')">
+          30 Jours
+        </button>
+        <button type="button" class="preset-btn" [class.active]="selectedPreset === 'MONTH'" (click)="selectPreset('MONTH')">
+          Ce mois-ci
+        </button>
+        <button type="button" class="preset-btn" [class.active]="selectedPreset === 'YEAR'" (click)="selectPreset('YEAR')">
+          Cette année
+        </button>
+      </div>
+
+      <!-- Custom Date Inputs -->
+      <div class="custom-date-inputs">
+        <div class="date-input-group">
+          <label for="startDate">Du :</label>
+          <input 
+            type="date" 
+            id="startDate" 
+            class="form-control-date" 
+            [(ngModel)]="startDate" 
+            (change)="onCustomDateChange()">
+        </div>
+        <div class="date-input-group">
+          <label for="endDate">Au :</label>
+          <input 
+            type="date" 
+            id="endDate" 
+            class="form-control-date" 
+            [(ngModel)]="endDate" 
+            (change)="onCustomDateChange()">
+        </div>
+
+        <button type="button" class="btn-reset-date" (click)="resetDateFilter()" title="Réinitialiser les filtres de date">
+          <span class="material-icons">restart_alt</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Data Analyst KPI Cards Row ===== -->
+  <div class="kpi-row">
+    <!-- 1. Volume Total -->
+    <div class="kpi-card kpi-total">
+      <div class="kpi-icon"><span class="material-icons">assignment</span></div>
+      <div class="kpi-body">
+        <span class="kpi-value">{{ totalFilteredCount }}</span>
+        <span class="kpi-label">Volume Filtré</span>
+      </div>
+    </div>
+
+    <!-- 2. Taux de Résolution -->
+    <div class="kpi-card kpi-rate">
+      <div class="kpi-icon"><span class="material-icons">check_circle</span></div>
+      <div class="kpi-body">
+        <span class="kpi-value">{{ getResolutionRate() }}%</span>
+        <span class="kpi-label">Taux de Résolution</span>
+      </div>
+    </div>
+
+    <!-- 3. MTTR (Mean Time To Resolution) -->
+    <div class="kpi-card kpi-mttr">
+      <div class="kpi-icon"><span class="material-icons">speed</span></div>
+      <div class="kpi-body">
+        <span class="kpi-value">{{ mttrDays }}j</span>
+        <span class="kpi-label">Temps Moyen (MTTR)</span>
+      </div>
+    </div>
+
+    <!-- 4. Backlog Rate -->
+    <div class="kpi-card kpi-backlog">
+      <div class="kpi-icon"><span class="material-icons">hourglass_top</span></div>
+      <div class="kpi-body">
+        <span class="kpi-value">{{ backlogRate }}%</span>
+        <span class="kpi-label">Dossiers en Cours</span>
+      </div>
+    </div>
+
+    <!-- 5. Taux d'Urgence -->
+    <div class="kpi-card kpi-critical">
+      <div class="kpi-icon"><span class="material-icons">warning</span></div>
+      <div class="kpi-body">
+        <span class="kpi-value">{{ criticalRate }}%</span>
+        <span class="kpi-label">Priorité Élevée / Critique</span>
+      </div>
+    </div>
+
+    <!-- 6. Vélocité Quotidienne -->
+    <div class="kpi-card kpi-velocity">
+      <div class="kpi-icon"><span class="material-icons">trending_up</span></div>
+      <div class="kpi-body">
+        <span class="kpi-value">{{ dailyIntake }}/j</span>
+        <span class="kpi-label">Vélocité Quotidienne</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Pro Widgets Row: SLA Scorecard + AI Volume Forecast ===== -->
+  <div class="charts-row two-col">
+    <!-- SLA Scorecard -->
+    <div class="chart-card pro-card-sla">
+      <div class="chart-title">
+        <span class="material-icons chart-title-icon" style="color:#10b981">verified_user</span>
+        Conformité SLA & Standard BCT (&lt;48h)
+      </div>
+      <div class="sla-score-wrapper">
+        <div class="sla-score-badge">
+          <span class="score-number">{{ slaComplianceScore }}%</span>
+          <span class="score-label">SLA Index</span>
+        </div>
+        <div class="sla-info">
+          <p class="sla-title">Objectif Qualité BCT Respecté</p>
+          <p class="sla-sub">Le délai moyen d'intervention respecte les exigences de la Banque Centrale de Tunisie.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Forecast Widget -->
+    <div class="chart-card pro-card-ai">
+      <div class="chart-title">
+        <span class="material-icons chart-title-icon" style="color:#6366f1">auto_awesome</span>
+        Prédiction IA de Volume (7 prochains jours)
+      </div>
+      <div class="forecast-wrapper">
+        <div class="forecast-stat">
+          <span class="forecast-val">+{{ aiForecastNextWeek }}</span>
+          <span class="forecast-lbl">Dossiers estimés</span>
+        </div>
+        <div class="forecast-info">
+          <p class="forecast-title">Modèle Prédictif BCT-IA</p>
+          <p class="forecast-sub">Basé sur la vélocité actuelle ({{ dailyIntake }} réclamations/jour) et les tendances saisonnières.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Row 1: Time-Series Line Graph + Weekday Heatmap ===== -->
+  <div class="charts-row two-col">
+    
+    <!-- Time Series Chart -->
+    <div class="chart-card">
+      <div class="chart-title">
+        <span class="material-icons chart-title-icon" style="color:#3b82f6">show_chart</span>
+        Évolution Temporelle des Réclamations
+      </div>
+
+      <div class="timeline-wrapper" *ngIf="timelinePoints.length > 0; else noTimelineTpl">
+        <div class="timeline-legend">
+          <span class="leg-item"><span class="leg-dot" style="background:#3b82f6"></span> Créées</span>
+          <span class="leg-item"><span class="leg-dot" style="background:#10b981"></span> Résolues</span>
+        </div>
+
+        <svg viewBox="0 0 600 160" class="timeline-svg">
+          <!-- Background grid lines -->
+          <line x1="20" y1="20" x2="580" y2="20" stroke="#f1f5f9" stroke-width="1" />
+          <line x1="20" y1="70" x2="580" y2="70" stroke="#f1f5f9" stroke-width="1" />
+          <line x1="20" y1="120" x2="580" y2="120" stroke="#f1f5f9" stroke-width="1" />
+
+          <!-- Lines -->
+          <path [attr.d]="timelineSvgPathCreated" fill="none" stroke="#3b82f6" stroke-width="3" />
+          <path [attr.d]="timelineSvgPathResolved" fill="none" stroke="#10b981" stroke-width="3" stroke-dasharray="4" />
+
+          <!-- Points -->
+          <g *ngFor="let pt of timelinePoints">
+            <circle [attr.cx]="pt.x" [attr.cy]="pt.yCreated" r="4" fill="#3b82f6" />
+            <circle [attr.cx]="pt.x" [attr.cy]="pt.yResolved" r="4" fill="#10b981" />
+            <text [attr.x]="pt.x" y="152" font-size="10" fill="#64748b" text-anchor="middle">{{ pt.dateLabel }}</text>
+          </g>
+        </svg>
+      </div>
+
+      <ng-template #noTimelineTpl>
+        <p class="no-data">Aucune réclamation dans la plage de dates sélectionnée.</p>
+      </ng-template>
+    </div>
+
+    <!-- Weekday Distribution Heatmap -->
+    <div class="chart-card">
+      <div class="chart-title">
+        <span class="material-icons chart-title-icon" style="color:#8b5cf6">calendar_view_week</span>
+        Distribution par Jour de la Semaine
+      </div>
+
+      <div class="weekday-chart">
+        <div class="weekday-bar-row" *ngFor="let wb of weekdayBars">
+          <span class="weekday-name">{{ wb.dayName }}</span>
+          <div class="weekday-track">
+            <div class="weekday-fill" [style.width.%]="wb.percentage"></div>
+          </div>
+          <span class="weekday-count">{{ wb.count }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Row 2: Status Donut + Status Details ===== -->
+  <div class="charts-row">
+
+    <!-- Donut: Status Distribution -->
+    <div class="chart-card donut-card">
+      <div class="chart-title">
+        <span class="material-icons chart-title-icon" style="color:#3b82f6">donut_large</span>
+        Répartition par Statut (Période)
+      </div>
+      <div class="donut-wrapper">
+        <svg [attr.viewBox]="'0 0 ' + CENTER*2 + ' ' + CENTER*2" class="donut-svg">
+          <!-- Background track -->
+          <circle [attr.cx]="CENTER" [attr.cy]="CENTER" [attr.r]="RADIUS" fill="none" stroke="#e2e8f0"
+            [attr.stroke-width]="22" />
+          <!-- Segments -->
+          <circle *ngFor="let seg of statusSegments" [attr.cx]="CENTER" [attr.cy]="CENTER" [attr.r]="RADIUS" fill="none"
+            [attr.stroke]="seg.color" stroke-width="22" stroke-linecap="butt"
+            [attr.stroke-dasharray]="getSegmentDashArray(seg)" [attr.stroke-dashoffset]="seg.offset"
+            transform="rotate(-90 90 90)" class="donut-segment" />
+          <!-- Center text -->
+          <text [attr.x]="CENTER" [attr.y]="CENTER - 8" class="donut-center-value" dominant-baseline="middle"
+            text-anchor="middle">
+            {{ totalFilteredCount }}
+          </text>
+          <text [attr.x]="CENTER" [attr.y]="CENTER + 16" class="donut-center-label" dominant-baseline="middle"
+            text-anchor="middle">
+            Période
+          </text>
+        </svg>
+
+        <!-- Legend -->
+        <div class="donut-legend">
+          <div class="legend-item" *ngFor="let seg of statusSegments">
+            <span class="legend-dot" [style.background]="seg.color"></span>
+            <div class="legend-text">
+              <span class="legend-label">{{ getStatusLabel(seg.label) }}</span>
+              <span class="legend-pct">{{ seg.value }} ({{ seg.percentage }}%)</span>
+            </div>
+          </div>
+          <div class="legend-item" *ngIf="statusSegments.length === 0">
+            <span class="no-data-small">Aucune donnée sur cette période.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status detailed bars -->
+    <div class="chart-card status-detail-card">
+      <div class="chart-title">
+        <span class="material-icons chart-title-icon" style="color:#f59e0b">bar_chart</span>
+        Détail & Progression des Statuts
+      </div>
+      <div class="status-bars">
+        <div class="status-bar-row">
+          <div class="status-bar-label">
+            <span class="status-dot" style="background:#3b82f6"></span>Nouvelles
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill"
+              [style.width.%]="totalFilteredCount ? (filteredStatutCounts['NOUVELLE'] || 0) / totalFilteredCount * 100 : 0"
+              style="background:#3b82f6"></div>
+          </div>
+          <span class="bar-count">{{ filteredStatutCounts['NOUVELLE'] || 0 }}</span>
+        </div>
+        <div class="status-bar-row">
+          <div class="status-bar-label">
+            <span class="status-dot" style="background:#f59e0b"></span>En Cours
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill"
+              [style.width.%]="totalFilteredCount ? (filteredStatutCounts['EN_COURS'] || 0) / totalFilteredCount * 100 : 0"
+              style="background:#f59e0b"></div>
+          </div>
+          <span class="bar-count">{{ filteredStatutCounts['EN_COURS'] || 0 }}</span>
+        </div>
+        <div class="status-bar-row">
+          <div class="status-bar-label">
+            <span class="status-dot" style="background:#10b981"></span>Résolues
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill"
+              [style.width.%]="totalFilteredCount ? (filteredStatutCounts['RESOLUE'] || 0) / totalFilteredCount * 100 : 0"
+              style="background:#10b981"></div>
+          </div>
+          <span class="bar-count">{{ filteredStatutCounts['RESOLUE'] || 0 }}</span>
+        </div>
+        <div class="status-bar-row">
+          <div class="status-bar-label">
+            <span class="status-dot" style="background:#ef4444"></span>Rejetées
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill"
+              [style.width.%]="totalFilteredCount ? (filteredStatutCounts['REJETEE'] || 0) / totalFilteredCount * 100 : 0"
+              style="background:#ef4444"></div>
+          </div>
+          <span class="bar-count">{{ filteredStatutCounts['REJETEE'] || 0 }}</span>
+        </div>
+
+        <!-- Resolution gauge -->
+        <div class="resolution-gauge">
+          <div class="gauge-header">
+            <span>Taux de résolution (Période)</span>
+            <strong>{{ getResolutionRate() }}%</strong>
+          </div>
+          <div class="gauge-track">
+            <div class="gauge-fill" [style.width.%]="getResolutionRate()"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Row 3: Priority + User Distribution ===== -->
+  <div class="charts-row two-col">
+
+    <!-- Priority Bar Chart -->
+    <div class="chart-card">
+      <div class="chart-title">
+        <span class="material-icons chart-title-icon" style="color:#b91c1c">priority_high</span>
+        Répartition par Priorité
+      </div>
+      <div class="hbar-chart">
+        <div class="hbar-row" *ngFor="let bar of priorityBars">
+          <span class="hbar-label">{{ bar.label }}</span>
+          <div class="hbar-track">
+            <div class="hbar-fill" [style.width.%]="bar.percentage" [style.background]="bar.color"></div>
+          </div>
+          <span class="hbar-val">{{ bar.value }}</span>
+        </div>
+        <p class="no-data" *ngIf="priorityBars.length === 0">Aucune donnée.</p>
+      </div>
+    </div>
+
+    <!-- User distribution -->
+    <div class="chart-card" *ngIf="stats">
+      <div class="chart-title">
+        <span class="material-icons chart-title-icon" style="color:#0891b2">people</span>
+        Distribution des Rôles Utilisateurs
+      </div>
+      <div class="user-dist">
+        <div class="user-dist-row kpi-card-mini kpi-clients">
+          <div class="mini-icon"><span class="material-icons">person</span></div>
+          <div class="mini-body">
+            <span class="mini-val">{{ stats.totalClients || 0 }}</span>
+            <span class="mini-lbl">Clients</span>
+          </div>
+          <div class="mini-pct" *ngIf="stats.totalUsers">
+            {{ stats.totalUsers ? ((stats.totalClients || 0) / stats.totalUsers * 100 | number:'1.0-0') : 0 }}%
+          </div>
+        </div>
+        <div class="user-dist-row kpi-card-mini kpi-agents-mini">
+          <div class="mini-icon"><span class="material-icons">support_agent</span></div>
+          <div class="mini-body">
+            <span class="mini-val">{{ stats.totalAgents || 0 }}</span>
+            <span class="mini-lbl">Agents</span>
+          </div>
+          <div class="mini-pct" *ngIf="stats.totalUsers">
+            {{ stats.totalUsers ? ((stats.totalAgents || 0) / stats.totalUsers * 100 | number:'1.0-0') : 0 }}%
+          </div>
+        </div>
+        <div class="user-dist-row kpi-card-mini kpi-admins">
+          <div class="mini-icon"><span class="material-icons">admin_panel_settings</span></div>
+          <div class="mini-body">
+            <span class="mini-val">{{ stats.totalAdmins || 0 }}</span>
+            <span class="mini-lbl">Admins</span>
+          </div>
+          <div class="mini-pct" *ngIf="stats.totalUsers">
+            {{ stats.totalUsers ? ((stats.totalAdmins || 0) / stats.totalUsers * 100 | number:'1.0-0') : 0 }}%
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Row 4: Category vertical bars ===== -->
+  <div class="chart-card full-width-card" *ngIf="categoryBars.length > 0">
+    <div class="chart-title">
+      <span class="material-icons chart-title-icon" style="color:#8b5cf6">category</span>
+      Réclamations par Catégorie Bancaire
+    </div>
+    <div class="vbar-chart">
+      <div class="vbar-group" *ngFor="let bar of categoryBars">
+        <div class="vbar-fill-wrapper">
+          <span class="vbar-count">{{ bar.value }}</span>
+          <div class="vbar-fill" [style.height.%]="bar.percentage" [style.background]="bar.color"></div>
+        </div>
+        <span class="vbar-label">{{ bar.label }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Row 5: Agent SLA & Workload Analyst Table ===== -->
+  <div class="chart-card full-width-card">
+    <div class="chart-title">
+      <span class="material-icons chart-title-icon" style="color:#1e3a8a">workspace_premium</span>
+      Tableau de Performance & SLA des Agents
+    </div>
+
+    <div class="agent-sla-table-wrapper" *ngIf="agentSlaList.length > 0; else noAgentSlaTpl">
+      <table class="analyst-table">
+        <thead>
+          <tr>
+            <th>Agent BCT</th>
+            <th>Dossiers Assignés</th>
+            <th>En Cours</th>
+            <th>Résolus</th>
+            <th>Taux de Résolution SLA</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let ag of agentSlaList">
+            <td class="agent-name-cell">
+              <span class="material-icons agent-icon">support_agent</span>
+              <strong>{{ ag.agentName }}</strong>
+            </td>
+            <td><span class="cell-pill blue">{{ ag.totalAssigned }}</span></td>
+            <td><span class="cell-pill amber">{{ ag.inProgressCount }}</span></td>
+            <td><span class="cell-pill green">{{ ag.resolvedCount }}</span></td>
+            <td>
+              <div class="sla-progress-flex">
+                <div class="bar-track">
+                  <div class="bar-fill" [style.width.%]="ag.resolutionRate" style="background:#10b981"></div>
+                </div>
+                <span class="sla-pct">{{ ag.resolutionRate }}%</span>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #noAgentSlaTpl>
+      <p class="no-data">Aucun dossier assigné à des agents sur cette période.</p>
+    </ng-template>
+  </div>
+
+
+
+  <!-- ===== Row 7: Quick Links ===== -->
+  <div class="quick-links-row">
+    <a routerLink="/admin/utilisateurs" class="quick-link-card link-users">
+      <span class="material-icons">group</span>
+      <span>Gérer les Utilisateurs</span>
+    </a>
+    <a routerLink="/admin/commentaires" class="quick-link-card link-comments">
+      <span class="material-icons">comment</span>
+      <span>Gérer les Commentaires</span>
+    </a>
+    <a routerLink="/reclamations" class="quick-link-card link-claims">
+      <span class="material-icons">assignment</span>
+      <span>Voir les Réclamations</span>
+    </a>
+    <a routerLink="/dashboard" class="quick-link-card link-dashboard">
+      <span class="material-icons">dashboard</span>
+      <span>Tableau de Bord</span>
+    </a>
+  </div>
+
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-fullpage">
+    <div class="spinner-ring"></div>
+    <p>Chargement du Dashboard Data Analyst...</p>
+  </div>
+</ng-template>

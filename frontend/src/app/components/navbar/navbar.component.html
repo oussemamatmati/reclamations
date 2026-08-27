@@ -1,0 +1,104 @@
+<nav class="navbar-glass">
+  <div class="nav-container">
+    <div class="nav-brand">
+      <div class="logo-wrapper">
+        <img src="assets/logo.png" alt="BCT Logo" class="brand-logo">
+        <span class="logo-halo"></span>
+      </div>
+      <div class="brand-titles">
+        <span class="brand-text">Banque Centrale de Tunisie</span>
+        <span class="brand-tag">Espace Client Officiel</span>
+      </div>
+    </div>
+
+    <div class="nav-links" *ngIf="currentUser$ | async as user">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+        <span class="material-icons icon-sm">dashboard</span> Dashboard
+      </a>
+      <a routerLink="/reclamations" routerLinkActive="active" class="nav-link">
+        <span class="material-icons icon-sm">assignment</span>
+        <span *ngIf="user.role === 'CLIENT'">Mes Réclamations</span>
+        <span *ngIf="user.role === 'AGENT'">Réclamations Assignées</span>
+        <span *ngIf="user.role === 'ADMIN'">Toutes les Réclamations</span>
+      </a>
+      <a routerLink="/reclamations/nouvelle" routerLinkActive="active" class="nav-link btn-nav-action"
+        *ngIf="user.role === 'CLIENT'">
+        <span class="material-icons icon-sm">add_circle</span> Déposer une Réclamation
+      </a>
+
+
+    </div>
+
+    <div class="nav-user" *ngIf="currentUser$ | async as user">
+      <div class="user-avatar-pill">
+        <div class="avatar-circle">
+          {{ (user.prenom || 'U')[0] | uppercase }}
+        </div>
+        <div class="user-info">
+          <span class="user-name">{{ user.prenom }} {{ user.nom }}</span>
+          <span class="user-role">{{ user.role }}</span>
+        </div>
+      </div>
+
+      <button (click)="logout()" class="btn-logout" title="Se déconnecter" aria-label="Se déconnecter">
+        <span class="material-icons">logout</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- Command Palette Modal Overlay -->
+<div class="cmd-overlay" *ngIf="isCommandPaletteOpen" (click)="toggleCommandPalette()">
+  <div class="cmd-modal animate-scale-in" (click)="$event.stopPropagation()">
+    <div class="cmd-header">
+      <span class="material-icons cmd-search-icon">search</span>
+      <input type="text" class="cmd-input" placeholder="Que souhaitez-vous faire ? (ex: statistiques, réclamation...)" autofocus>
+      <button class="cmd-close" (click)="toggleCommandPalette()"><span class="material-icons">close</span></button>
+    </div>
+
+    <div class="cmd-section" *ngIf="currentUser$ | async as user">
+      <span class="cmd-section-title">Navigation Rapide</span>
+      <div class="cmd-items">
+        <button class="cmd-item" (click)="navigateAndClose('/dashboard')">
+          <span class="material-icons item-icon">dashboard</span>
+          <div class="item-text">
+            <span class="item-title">Tableau de Bord</span>
+            <span class="item-sub">Vue d'ensemble et résumé des réclamations</span>
+          </div>
+        </button>
+
+        <button class="cmd-item" (click)="navigateAndClose('/reclamations')">
+          <span class="material-icons item-icon">assignment</span>
+          <div class="item-text">
+            <span class="item-title">Liste des Réclamations</span>
+            <span class="item-sub">Rechercher et filtrer tous les dossiers</span>
+          </div>
+        </button>
+
+        <button class="cmd-item" (click)="navigateAndClose('/reclamations/nouvelle')" *ngIf="user.role === 'CLIENT'">
+          <span class="material-icons item-icon">add_circle</span>
+          <div class="item-text">
+            <span class="item-title">Nouvelle Réclamation</span>
+            <span class="item-sub">Soumettre un nouveau dossier bancaire à la BCT</span>
+          </div>
+        </button>
+
+        <button class="cmd-item" (click)="navigateAndClose('/admin/statistiques')" *ngIf="user.role === 'ADMIN'">
+          <span class="material-icons item-icon">analytics</span>
+          <div class="item-text">
+            <span class="item-title">Statistiques Data Analyst & SLA</span>
+            <span class="item-sub">Rapports d'analyse, MTTR, et exports CSV/JSON</span>
+          </div>
+        </button>
+
+        <button class="cmd-item" (click)="navigateAndClose('/admin/utilisateurs')" *ngIf="user.role === 'ADMIN'">
+          <span class="material-icons item-icon">group</span>
+          <div class="item-text">
+            <span class="item-title">Gestion des Utilisateurs</span>
+            <span class="item-sub">Gérer les comptes clients, agents et administrateurs</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,166 @@
+<app-three-bg></app-three-bg>
+
+<div class="auth-page-container">
+  <div class="auth-grid">
+    <!-- Left Hero Showcase Panel -->
+    <div class="auth-hero-section animate-fade-in">
+      <div class="hero-brand">
+        <div class="logo-3d-wrapper">
+          <img src="assets/logo.png" alt="BCT Logo" class="hero-logo-img">
+          <div class="logo-glow-ring"></div>
+        </div>
+        <div class="brand-text">
+          <span class="brand-subtitle">Réclamations & Assistance Client</span>
+          <h1 class="brand-title">Banque Centrale <br><span class="highlight-text">de Tunisie</span></h1>
+        </div>
+      </div>
+
+      <p class="hero-description">
+        Plateforme numérique officielle de suivi et de gestion des réclamations bancaires en Tunisie. Sécurisée, transparente et disponible 24/7.
+      </p>
+
+      <!-- 3D Floating Feature Cards -->
+      <div class="hero-features-grid">
+        <div class="feature-card-3d">
+          <div class="feature-icon-wrapper blue">
+            <span class="material-icons">verified_user</span>
+          </div>
+          <div class="feature-info">
+            <h4>100% Sécurisé</h4>
+            <p>Protection avancée des données et authentification forte</p>
+          </div>
+        </div>
+
+        <div class="feature-card-3d">
+          <div class="feature-icon-wrapper amber">
+            <span class="material-icons">speed</span>
+          </div>
+          <div class="feature-info">
+            <h4>Traitement Rapide</h4>
+            <p>Suivi en temps réel de l'état de votre réclamation</p>
+          </div>
+        </div>
+
+        <div class="feature-card-3d">
+          <div class="feature-icon-wrapper cyan">
+            <span class="material-icons">support_agent</span>
+          </div>
+          <div class="feature-info">
+            <h4>Support Dédié</h4>
+            <p>Assistance par des agents spécialisés de la BCT</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-footer-status">
+        <span class="status-pulse"></span>
+        <span>Système opérationnel &bull; Service BCT Officiel</span>
+      </div>
+    </div>
+
+    <!-- Right Form Section -->
+    <div class="auth-card-wrapper">
+      <div class="auth-card-3d">
+
+        <!-- Tab Navigation Switcher -->
+        <div class="auth-tabs">
+          <a routerLink="/login" class="tab-btn active">
+            <span class="material-icons">login</span>
+            Connexion
+          </a>
+          <a routerLink="/register" class="tab-btn">
+            <span class="material-icons">person_add</span>
+            Inscription
+          </a>
+        </div>
+
+        <div class="auth-header">
+          <h2>Bon retour !</h2>
+          <p class="auth-subtitle">Connectez-vous à votre espace personnel BCT</p>
+        </div>
+
+        <form (ngSubmit)="onSubmit()" #loginForm="ngForm" class="auth-form">
+          <div class="alert alert-danger animate-fade-in" *ngIf="errorMessage">
+            <span class="material-icons alert-icon">error_outline</span>
+            <span>{{ errorMessage }}</span>
+          </div>
+
+          <!-- Email Input -->
+          <div class="form-group-animated">
+            <label for="email" class="animated-label">Adresse Email</label>
+            <div class="input-wrapper-3d">
+              <span class="material-icons input-icon">email</span>
+              <input 
+                type="email" 
+                id="email" 
+                name="email" 
+                class="form-control-3d" 
+                placeholder="Ex: client@gmail.com" 
+                [(ngModel)]="email" 
+                required>
+              <div class="input-focus-border"></div>
+            </div>
+          </div>
+
+          <!-- Password Input -->
+          <div class="form-group-animated">
+            <div class="label-row">
+              <label for="password" class="animated-label">Mot de passe</label>
+            </div>
+            <div class="input-wrapper-3d">
+              <span class="material-icons input-icon">lock</span>
+              <input 
+                [type]="showPassword ? 'text' : 'password'" 
+                id="password" 
+                name="password" 
+                class="form-control-3d" 
+                placeholder="••••••••" 
+                [(ngModel)]="motDePasse" 
+                required>
+              <button 
+                type="button" 
+                class="password-toggle-btn" 
+                (click)="togglePasswordVisibility()" 
+                tabindex="-1"
+                [attr.aria-label]="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'">
+                <span class="material-icons">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+              <div class="input-focus-border"></div>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn-primary-3d" [disabled]="isLoading">
+            <span class="btn-shimmer"></span>
+            <span class="btn-content">
+              <span class="material-icons spin" *ngIf="isLoading">sync</span>
+              <span *ngIf="!isLoading">Se connecter</span>
+              <span *ngIf="!isLoading" class="material-icons arrow-icon">arrow_forward</span>
+              <span *ngIf="isLoading">Connexion en cours...</span>
+            </span>
+          </button>
+
+          <!-- Links -->
+          <div class="auth-unverified-box" *ngIf="isUnverified">
+            <span class="material-icons warning-icon">warning</span>
+            <span>Votre compte n'est pas encore vérifié.</span>
+            <a routerLink="/verify-email" class="auth-link-highlight">
+              Saisir mon code de vérification &rarr;
+            </a>
+          </div>
+
+          <div class="auth-card-footer">
+            <p>
+              Pas encore de compte ? 
+              <a routerLink="/register" class="auth-link">Créer un compte</a>
+            </p>
+            <p class="sub-link">
+              <a routerLink="/verify-email" class="auth-link-secondary">Code de vérification email ?</a>
+            </p>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>

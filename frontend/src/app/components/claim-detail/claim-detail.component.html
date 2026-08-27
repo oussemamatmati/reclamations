@@ -1,0 +1,379 @@
+<div class="detail-page-container animate-fade-in">
+
+  <!-- Header & Back Button -->
+  <div class="detail-header-flex">
+    <button class="back-btn-glass" (click)="goBack()">
+      <span class="material-icons">arrow_back</span> Retour aux réclamations
+    </button>
+    <div *ngIf="claim" class="claim-id-badge">
+      Dossier BCT #{{ claim.id }}
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoadingClaim" class="loading-wrapper">
+    <span class="material-icons spin loading-icon">sync</span>
+    <p>Chargement du dossier...</p>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+  <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+
+  <!-- Main Content Grid -->
+  <div *ngIf="claim && !isLoadingClaim" class="detail-grid">
+
+    <!-- LEFT COLUMN: Workflow Stepper + Claim Info + Comments -->
+    <div class="col-main">
+
+      <!-- Live 4-Step Workflow Tracker -->
+      <div class="glass-card workflow-tracker-card">
+        <h3 class="section-title">
+          <span class="material-icons title-icon">alt_route</span>
+          Suivi de Traitement du Dossier
+        </h3>
+
+        <div class="workflow-stepper-row">
+          <!-- Step 1 -->
+          <div class="workflow-step" [ngClass]="getWorkflowStepState(1)">
+            <div class="step-icon-circle">
+              <span class="material-icons">send</span>
+            </div>
+            <div class="step-meta">
+              <span class="step-name">Déposée</span>
+              <span class="step-sub">{{ claim.dateCreation | date:'dd/MM/yyyy' }}</span>
+            </div>
+          </div>
+          <div class="workflow-connector" [ngClass]="{'active': getWorkflowStepState(2) !== 'pending'}"></div>
+
+          <!-- Step 2 -->
+          <div class="workflow-step" [ngClass]="getWorkflowStepState(2)">
+            <div class="step-icon-circle">
+              <span class="material-icons">support_agent</span>
+            </div>
+            <div class="step-meta">
+              <span class="step-name">Prise en charge</span>
+              <span class="step-sub" *ngIf="claim.agentId">{{ claim.agentPrenom }}</span>
+              <span class="step-sub" *ngIf="!claim.agentId">Attente Agent</span>
+            </div>
+          </div>
+          <div class="workflow-connector" [ngClass]="{'active': getWorkflowStepState(3) !== 'pending'}"></div>
+
+          <!-- Step 3 -->
+          <div class="workflow-step" [ngClass]="getWorkflowStepState(3)">
+            <div class="step-icon-circle">
+              <span class="material-icons">sync</span>
+            </div>
+            <div class="step-meta">
+              <span class="step-name">En Traitement</span>
+              <span class="step-sub">Investigation BCT</span>
+            </div>
+          </div>
+          <div class="workflow-connector" [ngClass]="{'active': getWorkflowStepState(4) !== 'pending'}"></div>
+
+          <!-- Step 4 -->
+          <div class="workflow-step" [ngClass]="getWorkflowStepState(4)">
+            <div class="step-icon-circle">
+              <span class="material-icons" *ngIf="claim.statut !== 'REJETEE'">check_circle</span>
+              <span class="material-icons" *ngIf="claim.statut === 'REJETEE'">cancel</span>
+            </div>
+            <div class="step-meta">
+              <span class="step-name" *ngIf="claim.statut !== 'REJETEE'">Résolue</span>
+              <span class="step-name" *ngIf="claim.statut === 'REJETEE'">Rejetée</span>
+              <span class="step-sub">Clôture</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Claim Details Header Card -->
+      <div class="glass-card claim-details-card">
+        <div class="claim-title-row">
+          <h1 class="claim-main-title">{{ claim.titre }}</h1>
+          <span class="badge-3d" [ngClass]="getStatusClass(claim.statut)">
+            <span class="status-dot"></span>
+            {{ claim.statut.replace('_', ' ') }}
+          </span>
+        </div>
+
+        <div class="claim-meta-pills">
+          <div class="meta-pill category">
+            <span class="material-icons pill-icon">folder</span>
+            <span>{{ claim.categorieNom || 'N/A' }}</span>
+          </div>
+
+          <div class="meta-pill priority">
+            <span class="badge-3d" [ngClass]="getPriorityClass(claim.priorite)">
+              {{ claim.priorite }}
+            </span>
+          </div>
+
+          <div class="meta-pill date">
+            <span class="material-icons pill-icon">event</span>
+            <span>{{ claim.dateCreation | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+        </div>
+
+        <div class="claim-description-box">
+          <h3>Description du problème</h3>
+          <p>{{ claim.description }}</p>
+        </div>
+
+        <div class="claim-assignment-info">
+          <div class="info-pill" *ngIf="isAdminOrAgent()">
+            <span class="material-icons">person</span>
+            <span>Client : <strong>{{ claim.clientPrenom }} {{ claim.clientNom }}</strong> ({{ claim.clientEmail
+              }})</span>
+          </div>
+
+          <div class="info-pill">
+            <span class="material-icons">support_agent</span>
+            <span>Agent assigné :
+              <strong *ngIf="claim.agentId">{{ claim.agentPrenom }} {{ claim.agentNom }}</strong>
+              <em *ngIf="!claim.agentId" class="text-muted">Non assigné</em>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5-Star Satisfaction Rating (Client + RESOLUE only) -->
+      <div class="glass-card rating-card" *ngIf="isClient() && claim.statut === 'RESOLUE'">
+        <div class="rating-header">
+          <span class="material-icons rating-title-icon">star_rate</span>
+          <div>
+            <h3>Votre Avis sur la Résolution</h3>
+            <p class="rating-sub">Aidez-nous à améliorer nos services en évaluant le traitement de votre dossier.</p>
+          </div>
+        </div>
+
+        <ng-container *ngIf="!ratingSubmitted">
+          <div class="stars-row" (mouseleave)="clearHoverRating()">
+            <button *ngFor="let star of starArray()" type="button" class="star-btn"
+              [class.star-active]="starClass(star) === 'star-active'" (mouseenter)="setHoverRating(star)"
+              (click)="setRating(star)">
+              <span class="material-icons">star</span>
+            </button>
+          </div>
+          <p class="rating-label-text" *ngIf="satisfactionRating > 0">{{ getRatingLabel() }}</p>
+
+          <textarea class="feedback-textarea" [(ngModel)]="feedbackText"
+            placeholder="Commentaire optionnel sur la résolution de votre dossier..." rows="3"
+            *ngIf="satisfactionRating > 0">
+          </textarea>
+
+          <button class="btn-submit-rating" [disabled]="satisfactionRating === 0" (click)="submitRating()">
+            <span class="material-icons">send</span>
+            Soumettre mon évaluation
+          </button>
+        </ng-container>
+
+        <div class="rating-success" *ngIf="ratingSubmitted">
+          <span class="material-icons rating-done-icon">verified</span>
+          <div>
+            <strong>Merci pour votre retour !</strong>
+            <p>Vous avez noté ce dossier <strong>{{ satisfactionRating }}/5 étoiles</strong>.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comments Thread Section -->
+      <div class="glass-card comments-section-card">
+        <h3 class="section-title">
+          <span class="material-icons title-icon">chat</span>
+          Échanges &amp; Commentaires ({{ comments.length }})
+        </h3>
+
+        <div class="chat-thread" *ngIf="comments.length > 0; else noCommentsTpl">
+          <div
+            *ngFor="let c of comments"
+            class="chat-row"
+            [class.chat-row-mine]="isMine(c)"
+            [class.chat-row-other]="!isMine(c)">
+
+            <!-- Avatar (always on the outer side) -->
+            <div class="chat-avatar" [class.avatar-staff]="isStaff(c)" [class.avatar-client]="c.agentRole === 'CLIENT'">
+              {{ (c.agentPrenom || 'U')[0] | uppercase }}
+            </div>
+
+            <!-- Bubble -->
+            <div class="chat-bubble-wrapper">
+              <div class="chat-meta-row" [class.meta-right]="isMine(c)">
+                <span class="chat-author">{{ c.agentPrenom }} {{ c.agentNom }}</span>
+                <span class="chat-role-tag" [class.tag-staff]="isStaff(c)" [class.tag-client]="c.agentRole === 'CLIENT'">
+                  {{ c.agentRole }}
+                </span>
+                <span class="chat-time">{{ c.dateCommentaire | date:'dd/MM HH:mm' }}</span>
+              </div>
+              <div class="chat-bubble" [class.bubble-mine]="isMine(c)" [class.bubble-other]="!isMine(c)">
+                <p class="bubble-text">{{ c.contenu }}</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <ng-template #noCommentsTpl>
+          <div class="empty-comments-state">
+            <span class="material-icons">forum</span>
+            <p>Aucun commentaire dans ce dossier pour l'instant.</p>
+          </div>
+        </ng-template>
+
+        <!-- Comment Editor -->
+        <div class="comment-editor-box">
+          <div class="editor-top-bar">
+            <div class="editor-snippets-list">
+              <span class="snippet-label">Modèles rapides :</span>
+              <button type="button" class="snippet-chip-btn" *ngFor="let snippet of quickSnippets"
+                (click)="insertSnippet(snippet)">
+                + {{ snippet }}
+              </button>
+            </div>
+            <span class="char-counter-pill" [class.warning]="newComment.length > 800">
+              {{ newComment.length }} caractères
+            </span>
+          </div>
+
+          <div class="textarea-glow-wrapper">
+            <textarea id="newComment" [(ngModel)]="newComment" (keydown)="onCommentKeydown($event)" rows="4"
+              placeholder="Écrivez votre message ou précisez une question à l'équipe BCT..."
+              class="comment-textarea-glass"></textarea>
+          </div>
+
+          <div class="editor-bottom-bar">
+            <div class="keyboard-hint">
+              <span class="material-icons keyboard-icon">keyboard</span>
+              <span><strong>Ctrl + Entrée</strong> pour envoyer</span>
+            </div>
+
+            <button class="btn-send-comment-3d" (click)="submitComment()"
+              [disabled]="!newComment.trim() || isSubmittingComment">
+              <span class="btn-shimmer"></span>
+              <span class="btn-content">
+                <span class="material-icons spin" *ngIf="isSubmittingComment">sync</span>
+                <span class="material-icons send-fly-icon" *ngIf="!isSubmittingComment">send</span>
+                <span>{{ isSubmittingComment ? 'Transmission...' : 'Envoyer le message' }}</span>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: Attestation (Client) + Admin Actions + History -->
+    <div class="col-sidebar">
+
+      <!-- Attestation de Dépôt (Client only) -->
+      <div class="glass-card attestation-card" *ngIf="isClient()">
+        <div class="attestation-header">
+          <span class="material-icons attestation-icon">picture_as_pdf</span>
+          <div>
+            <h3>Attestation de Dépôt</h3>
+            <p class="attestation-sub">Document officiel BCT horodaté</p>
+          </div>
+        </div>
+        <p class="attestation-desc">
+          Téléchargez votre récépissé officiel de réclamation pour vos démarches bancaires ou juridiques.
+        </p>
+        <button class="btn-download-attestation" (click)="downloadAttestation()">
+          <span class="material-icons">download</span>
+          Télécharger l'Attestation PDF
+        </button>
+      </div>
+
+      <!-- Admin / Agent Control Panel -->
+      <div class="glass-card control-panel-card" *ngIf="isAdminOrAgent()">
+        <div class="card-header-flex">
+          <h3 class="section-title">
+            <span class="material-icons title-icon">tune</span>
+            Gestion du Dossier
+          </h3>
+          <span class="live-status-pill" [ngClass]="getStatusClass(claim.statut)">
+            {{ claim.statut.replace('_', ' ') }}
+          </span>
+        </div>
+
+        <div class="control-fields-group">
+          <!-- Status Dropdown (instant action) -->
+          <div class="control-item">
+            <label class="control-label-glass">
+              <span class="material-icons">published_with_changes</span> Modifier le Statut :
+              <span class="spinner-inline" *ngIf="isUpdatingStatus">
+                <span class="material-icons spin">sync</span>
+              </span>
+            </label>
+            <div class="select-glow-wrapper" [class.loading]="isUpdatingStatus">
+              <select
+                [ngModel]="claim.statut"
+                (ngModelChange)="setStatusDirectly($event)"
+                [disabled]="isUpdatingStatus"
+                class="form-control-glass select-status-dropdown">
+                <option value="NOUVELLE">Nouvelle</option>
+                <option value="EN_COURS">En Cours</option>
+                <option value="RESOLUE">Résolue</option>
+                <option value="REJETEE">Rejetée</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="section-divider" *ngIf="isAdmin()"></div>
+
+          <!-- Assign Agent (Admin only, instant action) -->
+          <div class="control-item" *ngIf="isAdmin()">
+            <label class="control-label-glass">
+              <span class="material-icons">person_add</span> Assigner un Agent BCT :
+              <span class="spinner-inline" *ngIf="isAssigning">
+                <span class="material-icons spin">sync</span>
+              </span>
+            </label>
+            <div class="select-glow-wrapper" [class.loading]="isAssigning">
+              <select
+                [(ngModel)]="selectedAgentId"
+                (change)="assignAgent()"
+                [disabled]="isAssigning"
+                class="form-control-glass select-agent-dropdown">
+                <option [ngValue]="undefined">-- Aucun Agent Assigné --</option>
+                <option *ngFor="let agent of agents" [value]="agent.id">
+                  {{ agent.prenom }} {{ agent.nom }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- History Timeline -->
+      <div class="glass-card history-card">
+        <h3 class="section-title">
+          <span class="material-icons title-icon">history</span>
+          Historique des modifications
+        </h3>
+
+        <div class="history-timeline-list" *ngIf="history.length > 0; else noHistoryTpl">
+          <div *ngFor="let h of history" class="timeline-entry">
+            <div class="timeline-dot-3d" [ngClass]="getStatusClass(h.nouveauStatut)"></div>
+            <div class="timeline-entry-content">
+              <div class="status-change-row">
+                <span *ngIf="h.ancienStatut" class="old-status">{{ h.ancienStatut }}</span>
+                <span *ngIf="h.ancienStatut" class="arrow">&rarr;</span>
+                <span class="badge-3d" [ngClass]="getStatusClass(h.nouveauStatut)">{{ h.nouveauStatut }}</span>
+              </div>
+              <div class="timeline-by-user">
+                Par {{ h.utilisateur.prenom }} {{ h.utilisateur.nom }} ({{ h.utilisateur.role }})
+              </div>
+              <div class="timeline-timestamp">{{ h.dateModification | date:'dd/MM/yyyy HH:mm' }}</div>
+            </div>
+          </div>
+        </div>
+        <ng-template #noHistoryTpl>
+          <p class="no-data-text">Aucun historique de statut disponible.</p>
+        </ng-template>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

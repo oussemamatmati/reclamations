@@ -1,0 +1,214 @@
+<app-three-bg></app-three-bg>
+
+<div class="auth-page-container">
+  <div class="auth-grid">
+    <!-- Left Hero Showcase Panel -->
+    <div class="auth-hero-section animate-fade-in">
+      <div class="hero-brand">
+        <div class="logo-3d-wrapper">
+          <img src="assets/logo.png" alt="BCT Logo" class="hero-logo-img">
+          <div class="logo-glow-ring"></div>
+        </div>
+        <div class="brand-text">
+          <span class="brand-subtitle">Réclamations & Assistance Client</span>
+          <h1 class="brand-title">Banque Centrale <br><span class="highlight-text">de Tunisie</span></h1>
+        </div>
+      </div>
+
+      <p class="hero-description">
+        Rejoignez la plateforme officielle et bénéficiez d'un suivi automatisé, sécurisé et transparent de vos réclamations auprès des institutions financières.
+      </p>
+
+      <!-- 3D Floating Feature Cards -->
+      <div class="hero-features-grid">
+        <div class="feature-card-3d">
+          <div class="feature-icon-wrapper blue">
+            <span class="material-icons">badge</span>
+          </div>
+          <div class="feature-info">
+            <h4>Espace Personnel Sécurisé</h4>
+            <p>Accès confidentiel à votre historique complet</p>
+          </div>
+        </div>
+
+        <div class="feature-card-3d">
+          <div class="feature-icon-wrapper amber">
+            <span class="material-icons">mark_email_read</span>
+          </div>
+          <div class="feature-info">
+            <h4>Notifications Instantanées</h4>
+            <p>Alertes par email à chaque étape de votre dossier</p>
+          </div>
+        </div>
+
+        <div class="feature-card-3d">
+          <div class="feature-icon-wrapper cyan">
+            <span class="material-icons">security</span>
+          </div>
+          <div class="feature-info">
+            <h4>Vérification OTP</h4>
+            <p>Code de sécurité envoyé lors de la création de compte</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-footer-status">
+        <span class="status-pulse"></span>
+        <span>Plateforme officielle &bull; Service BCT</span>
+      </div>
+    </div>
+
+    <!-- Right Form Section -->
+    <div class="auth-card-wrapper">
+      <div class="auth-card-3d">
+
+        <!-- Tab Navigation Switcher -->
+        <div class="auth-tabs">
+          <a routerLink="/login" class="tab-btn">
+            <span class="material-icons">login</span>
+            Connexion
+          </a>
+          <a routerLink="/register" class="tab-btn active">
+            <span class="material-icons">person_add</span>
+            Inscription
+          </a>
+        </div>
+
+        <div class="auth-header">
+          <h2>Créer un compte</h2>
+          <p class="auth-subtitle">Remplissez vos informations pour ouvrir votre espace client</p>
+        </div>
+
+        <form (ngSubmit)="onSubmit()" #registerForm="ngForm" class="auth-form">
+          <div class="alert alert-danger animate-fade-in" *ngIf="errorMessage">
+            <span class="material-icons alert-icon">error_outline</span>
+            <span>{{ errorMessage }}</span>
+          </div>
+
+          <div class="alert alert-success animate-fade-in" *ngIf="successMessage">
+            <span class="material-icons alert-icon">check_circle_outline</span>
+            <span>{{ successMessage }}</span>
+          </div>
+
+          <!-- Nom & Prénom Row -->
+          <div class="form-row-2col">
+            <div class="form-group-animated">
+              <label for="prenom" class="animated-label">Prénom *</label>
+              <div class="input-wrapper-3d">
+                <span class="material-icons input-icon">person</span>
+                <input 
+                  type="text" 
+                  id="prenom" 
+                  name="prenom" 
+                  class="form-control-3d" 
+                  placeholder="Ex: Mohamed" 
+                  [(ngModel)]="prenom" 
+                  required>
+              </div>
+            </div>
+
+            <div class="form-group-animated">
+              <label for="nom" class="animated-label">Nom *</label>
+              <div class="input-wrapper-3d">
+                <span class="material-icons input-icon">badge</span>
+                <input 
+                  type="text" 
+                  id="nom" 
+                  name="nom" 
+                  class="form-control-3d" 
+                  placeholder="Ex: Trabelsi" 
+                  [(ngModel)]="nom" 
+                  required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Email Input -->
+          <div class="form-group-animated">
+            <label for="email" class="animated-label">Adresse Email *</label>
+            <div class="input-wrapper-3d">
+              <span class="material-icons input-icon">email</span>
+              <input 
+                type="email" 
+                id="email" 
+                name="email" 
+                class="form-control-3d" 
+                placeholder="Ex: client@gmail.com" 
+                [(ngModel)]="email" 
+                required>
+            </div>
+          </div>
+
+          <!-- Password Input -->
+          <div class="form-group-animated">
+            <div class="label-row">
+              <label for="password" class="animated-label">Mot de passe *</label>
+              <span class="strength-tag" *ngIf="strengthLabel" [style.color]="strengthColor">
+                {{ strengthLabel }}
+              </span>
+            </div>
+            <div class="input-wrapper-3d">
+              <span class="material-icons input-icon">lock</span>
+              <input 
+                [type]="showPassword ? 'text' : 'password'" 
+                id="password" 
+                name="password" 
+                class="form-control-3d" 
+                placeholder="••••••••" 
+                [(ngModel)]="motDePasse" 
+                (input)="onPasswordInput()"
+                required>
+              <button 
+                type="button" 
+                class="password-toggle-btn" 
+                (click)="togglePasswordVisibility()" 
+                tabindex="-1"
+                [attr.aria-label]="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'">
+                <span class="material-icons">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
+
+            <!-- Password Strength Bar -->
+            <div class="strength-bar-container" *ngIf="motDePasse">
+              <div class="strength-bar-fill" [style.width.%]="(strengthScore / 4) * 100" [style.background]="strengthColor"></div>
+            </div>
+          </div>
+
+          <!-- Phone Input -->
+          <div class="form-group-animated">
+            <label for="telephone" class="animated-label">Téléphone</label>
+            <div class="input-wrapper-3d">
+              <span class="material-icons input-icon">phone</span>
+              <input 
+                type="text" 
+                id="telephone" 
+                name="telephone" 
+                class="form-control-3d" 
+                placeholder="Ex: 22222222" 
+                [(ngModel)]="telephone">
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn-primary-3d" [disabled]="isLoading">
+            <span class="btn-shimmer"></span>
+            <span class="btn-content">
+              <span class="material-icons spin" *ngIf="isLoading">sync</span>
+              <span *ngIf="!isLoading">Créer mon compte</span>
+              <span *ngIf="!isLoading" class="material-icons arrow-icon">arrow_forward</span>
+              <span *ngIf="isLoading">Création en cours...</span>
+            </span>
+          </button>
+
+          <div class="auth-card-footer">
+            <p>
+              Déjà un compte ? 
+              <a routerLink="/login" class="auth-link">Se connecter</a>
+            </p>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>

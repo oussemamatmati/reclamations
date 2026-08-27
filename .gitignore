@@ -1,0 +1,78 @@
+# =========================
+# Angular / Node
+# =========================
+
+frontend/node_modules/
+frontend/.angular/
+frontend/dist/
+
+# Node logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# =========================
+# Java / Maven
+# =========================
+
+backend/target/
+
+# Java compiled files
+*.class
+
+# Maven
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+
+# =========================
+# IDE
+# =========================
+
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+
+# =========================
+# OS
+# =========================
+
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# =========================
+# Local tools / installers
+# =========================
+
+apache-maven-*/
+jdk-*/
+nodejs-*/
+
+# =========================
+# Logs
+# =========================
+
+*.log
+
+# =========================
+# Temporary files
+# =========================
+
+*.tmp
+*.bak
+
+nodejs-lts.msi
+*.msi

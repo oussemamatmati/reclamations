@@ -1,0 +1,73 @@
+<app-three-bg></app-three-bg>
+
+<div class="auth-page-container">
+  <div class="auth-card-wrapper max-w-md">
+    <div 
+      class="auth-card-3d" 
+      [style.transform]="cardTransform"
+      (mousemove)="onMouseMove($event)"
+      (mouseleave)="onMouseLeave()">
+      
+      <!-- Light Reflection Glare Overlay -->
+      <div 
+        class="card-glare"
+        [style.background]="'radial-gradient(circle at ' + glarePosition + ', rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 65%)'"
+        [style.opacity]="glareOpacity">
+      </div>
+
+      <div class="auth-header">
+        <div class="verify-icon-badge">
+          <span class="material-icons">mark_email_read</span>
+        </div>
+        <h2>Vérification Email</h2>
+        <p class="auth-subtitle">Saisissez le code secret à 6 chiffres envoyé sur votre boîte mail</p>
+      </div>
+
+      <form (ngSubmit)="onSubmit()" #verifyForm="ngForm" class="auth-form">
+        <div class="alert alert-danger animate-fade-in" *ngIf="errorMessage">
+          <span class="material-icons alert-icon">error_outline</span>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <div class="alert alert-success animate-fade-in" *ngIf="successMessage">
+          <span class="material-icons alert-icon">check_circle_outline</span>
+          <span>{{ successMessage }}</span>
+        </div>
+
+        <div class="form-group-animated">
+          <label for="code" class="animated-label">Code de Vérification *</label>
+          <div class="input-wrapper-3d">
+            <span class="material-icons input-icon">key</span>
+            <input 
+              type="text" 
+              id="code" 
+              name="code" 
+              class="form-control-3d code-input" 
+              placeholder="Ex: 123456" 
+              [(ngModel)]="code" 
+              required
+              maxlength="10">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary-3d" [disabled]="isLoading">
+          <span class="btn-shimmer"></span>
+          <span class="btn-content">
+            <span class="material-icons spin" *ngIf="isLoading">sync</span>
+            <span *ngIf="!isLoading">Vérifier mon email</span>
+            <span *ngIf="!isLoading" class="material-icons arrow-icon">arrow_forward</span>
+            <span *ngIf="isLoading">Vérification...</span>
+          </span>
+        </button>
+
+        <div class="auth-card-footer">
+          <p>
+            Vous avez déjà un compte actif ? 
+            <a routerLink="/login" class="auth-link">Se connecter</a>
+          </p>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>

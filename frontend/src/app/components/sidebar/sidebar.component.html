@@ -1,0 +1,52 @@
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <img src="assets/logo.png" alt="BCT Logo" class="sidebar-logo">
+    <div class="sidebar-brand">
+      <span class="brand-sub">Administration</span>
+    </div>
+  </div>
+
+  <div class="user-profile" *ngIf="currentUser">
+    <div class="avatar">
+      {{ (currentUser.prenom || 'A')[0] | uppercase }}
+    </div>
+    <div class="profile-info">
+      <span class="profile-name">{{ currentUser.prenom }} {{ currentUser.nom }}</span>
+      <span class="profile-role">Administrateur</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-menu">
+    <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="menu-item">
+      <span class="material-icons menu-icon">dashboard</span>
+      <span class="menu-text">Tableau de Bord</span>
+    </a>
+
+    <a routerLink="/admin/statistiques" routerLinkActive="active" class="menu-item">
+      <span class="material-icons menu-icon">insights</span>
+      <span class="menu-text">Statistiques</span>
+    </a>
+
+    <a routerLink="/reclamations" routerLinkActive="active" class="menu-item">
+      <span class="material-icons menu-icon">assignment</span>
+      <span class="menu-text">Réclamations</span>
+    </a>
+
+    <a routerLink="/admin/commentaires" routerLinkActive="active" class="menu-item">
+      <span class="material-icons menu-icon">comment</span>
+      <span class="menu-text">Commentaires</span>
+    </a>
+
+    <a routerLink="/admin/utilisateurs" routerLinkActive="active" class="menu-item">
+      <span class="material-icons menu-icon">group</span>
+      <span class="menu-text">Utilisateurs</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button (click)="logout()" class="btn-logout-sidebar">
+      <span class="material-icons">logout</span>
+      <span class="menu-text">Se déconnecter</span>
+    </button>
+  </div>
+</aside>

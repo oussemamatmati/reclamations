@@ -1,0 +1,388 @@
+<div class="dashboard-page animate-fade-in" *ngIf="!isLoading; else loadingTpl">
+
+  <!-- Welcome Hero Banner -->
+  <div class="client-welcome-hero" *ngIf="currentUser">
+    <div class="hero-content">
+      <div class="welcome-badge">
+        <span class="status-pulse-dot"></span>
+        <span>Espace Client Sécurisé BCT</span>
+      </div>
+      <h1 class="welcome-title">
+        Bonjour, <span class="gradient-name">{{ currentUser.prenom }} {{ currentUser.nom }}</span> 👋
+      </h1>
+      <p class="welcome-subtitle">
+        Suivez en temps réel l'avancement de vos réclamations bancaires auprès de la Banque Centrale de Tunisie.
+      </p>
+    </div>
+
+    <div class="hero-actions" *ngIf="currentUser.role === 'CLIENT'">
+      <a routerLink="/reclamations/nouvelle" class="btn-hero-action">
+        <span class="btn-shimmer"></span>
+        <span class="btn-content">
+          <span class="material-icons">add_circle</span>
+          Déposer une Réclamation
+        </span>
+      </a>
+    </div>
+
+    <div class="hero-bg-glow"></div>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="errorMessage">
+    <span class="material-icons">error_outline</span>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <!-- 3D Stat Cards Grid -->
+  <div class="stats-grid-3d" *ngIf="stats">
+
+    <!-- Total -->
+    <div class="stat-card-3d total"
+      [style.transform]="cardTransforms['total'] || 'perspective(1000px) rotateX(0deg) rotateY(0deg)'"
+      (mousemove)="onCardMouseMove($event, 'total')" (mouseleave)="onCardMouseLeave('total')">
+      <div class="stat-icon-wrapper blue">
+        <span class="material-icons">assignment</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Total Réclamations</span>
+        <span class="stat-value">{{ stats.totalReclamations }}</span>
+      </div>
+      <div class="card-glow-bg blue"></div>
+    </div>
+
+    <!-- Nouvelles -->
+    <div class="stat-card-3d nouvelle"
+      [style.transform]="cardTransforms['nouvelle'] || 'perspective(1000px) rotateX(0deg) rotateY(0deg)'"
+      (mousemove)="onCardMouseMove($event, 'nouvelle')" (mouseleave)="onCardMouseLeave('nouvelle')">
+      <div class="stat-icon-wrapper cyan">
+        <span class="material-icons">notifications_active</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Nouvelles</span>
+        <span class="stat-value">{{ stats.statutCounts['NOUVELLE'] || 0 }}</span>
+      </div>
+      <div class="card-glow-bg cyan"></div>
+    </div>
+
+    <!-- En Cours -->
+    <div class="stat-card-3d encours"
+      [style.transform]="cardTransforms['encours'] || 'perspective(1000px) rotateX(0deg) rotateY(0deg)'"
+      (mousemove)="onCardMouseMove($event, 'encours')" (mouseleave)="onCardMouseLeave('encours')">
+      <div class="stat-icon-wrapper amber">
+        <span class="material-icons">sync</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">En Cours</span>
+        <span class="stat-value">{{ stats.statutCounts['EN_COURS'] || 0 }}</span>
+      </div>
+      <div class="card-glow-bg amber"></div>
+    </div>
+
+    <!-- Résolues -->
+    <div class="stat-card-3d resolue"
+      [style.transform]="cardTransforms['resolue'] || 'perspective(1000px) rotateX(0deg) rotateY(0deg)'"
+      (mousemove)="onCardMouseMove($event, 'resolue')" (mouseleave)="onCardMouseLeave('resolue')">
+      <div class="stat-icon-wrapper emerald">
+        <span class="material-icons">check_circle</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Résolues</span>
+        <span class="stat-value">{{ stats.statutCounts['RESOLUE'] || 0 }}</span>
+      </div>
+      <div class="card-glow-bg emerald"></div>
+    </div>
+
+  </div>
+
+  <!-- Admin Extra Stats Row -->
+  <div class="stats-grid-3d admin-stats" *ngIf="stats && currentUser?.role === 'ADMIN'">
+    <div class="stat-card-3d users-total">
+      <div class="stat-icon-wrapper blue">
+        <span class="material-icons">group</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Utilisateurs</span>
+        <span class="stat-value">{{ stats.totalUsers || 0 }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card-3d stat-clients">
+      <div class="stat-icon-wrapper cyan">
+        <span class="material-icons">person</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Clients</span>
+        <span class="stat-value">{{ stats.totalClients || 0 }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card-3d stat-agents">
+      <div class="stat-icon-wrapper amber">
+        <span class="material-icons">support_agent</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Agents</span>
+        <span class="stat-value">{{ stats.totalAgents || 0 }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card-3d stat-comments">
+      <div class="stat-icon-wrapper emerald">
+        <span class="material-icons">comment</span>
+      </div>
+      <div class="stat-content">
+        <span class="stat-label">Commentaires</span>
+        <span class="stat-value">{{ stats.totalComments || 0 }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytical Breakdowns Grid -->
+  <div class="breakdown-grid" *ngIf="stats">
+
+    <!-- Category distribution -->
+    <div class="glass-card breakdown-card">
+      <div class="card-header-flex">
+        <div>
+          <h3>Distribution par Catégorie</h3>
+          <p class="card-desc">Volume des réclamations par type de service</p>
+        </div>
+        <span class="material-icons header-icon">pie_chart</span>
+      </div>
+
+      <div class="breakdown-list" *ngIf="getMapKeys(stats.categorieCounts).length > 0; else noCatTpl">
+        <div class="breakdown-item" *ngFor="let catKey of getMapKeys(stats.categorieCounts)">
+          <div class="breakdown-item-header">
+            <span class="item-name">{{ catKey }}</span>
+            <span class="item-count">{{ stats.categorieCounts[catKey] }} ({{
+              getPercentage(stats.categorieCounts[catKey]) }}%)</span>
+          </div>
+          <div class="progress-track-glass">
+            <div class="progress-bar-gradient" [style.width.%]="getPercentage(stats.categorieCounts[catKey])"></div>
+          </div>
+        </div>
+      </div>
+      <ng-template #noCatTpl>
+        <p class="no-data">Aucune donnée de catégorie disponible.</p>
+      </ng-template>
+    </div>
+
+    <!-- Priority breakdown -->
+    <div class="glass-card breakdown-card">
+      <div class="card-header-flex">
+        <div>
+          <h3>Gravité et Priorités</h3>
+          <p class="card-desc">Répartition par niveau d'urgence</p>
+        </div>
+        <span class="material-icons header-icon">bar_chart</span>
+      </div>
+
+      <div class="priority-list">
+        <div class="priority-item critique">
+          <span class="priority-label">Critique</span>
+          <div class="priority-bar-wrapper">
+            <div class="priority-bar critique" [style.width.%]="getPercentage(stats.prioriteCounts['CRITIQUE'] || 0)">
+            </div>
+          </div>
+          <span class="priority-val">{{ stats.prioriteCounts['CRITIQUE'] || 0 }}</span>
+        </div>
+
+        <div class="priority-item elevee">
+          <span class="priority-label">Élevée</span>
+          <div class="priority-bar-wrapper">
+            <div class="priority-bar elevee" [style.width.%]="getPercentage(stats.prioriteCounts['ELEVEE'] || 0)"></div>
+          </div>
+          <span class="priority-val">{{ stats.prioriteCounts['ELEVEE'] || 0 }}</span>
+        </div>
+
+        <div class="priority-item moyenne">
+          <span class="priority-label">Moyenne</span>
+          <div class="priority-bar-wrapper">
+            <div class="priority-bar moyenne" [style.width.%]="getPercentage(stats.prioriteCounts['MOYENNE'] || 0)">
+            </div>
+          </div>
+          <span class="priority-val">{{ stats.prioriteCounts['MOYENNE'] || 0 }}</span>
+        </div>
+
+        <div class="priority-item faible">
+          <span class="priority-label">Faible</span>
+          <div class="priority-bar-wrapper">
+            <div class="priority-bar faible" [style.width.%]="getPercentage(stats.prioriteCounts['FAIBLE'] || 0)"></div>
+          </div>
+          <span class="priority-val">{{ stats.prioriteCounts['FAIBLE'] || 0 }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Agent workloads (Admin only) -->
+    <div class="glass-card breakdown-card" *ngIf="currentUser?.role === 'ADMIN'">
+      <div class="card-header-flex">
+        <div>
+          <h3>Charge de travail des Agents</h3>
+          <p class="card-desc">Nombre de dossiers assignés par agent</p>
+        </div>
+        <span class="material-icons header-icon">support_agent</span>
+      </div>
+
+      <div class="breakdown-list" *ngIf="getMapKeys(stats.agentWorkload).length > 0; else noAgentWorkloadTpl">
+        <div class="breakdown-item" *ngFor="let agentKey of getMapKeys(stats.agentWorkload)">
+          <div class="breakdown-item-header">
+            <span class="item-name">
+              <span class="material-icons agent-badge-icon">support_agent</span>
+              {{ agentKey }}
+            </span>
+            <span class="item-count">{{ stats.agentWorkload[agentKey] }} dossiers</span>
+          </div>
+          <div class="progress-track-glass">
+            <div class="progress-bar-gradient agent-bar" [style.width.%]="getPercentage(stats.agentWorkload[agentKey])">
+            </div>
+          </div>
+        </div>
+      </div>
+      <ng-template #noAgentWorkloadTpl>
+        <p class="no-data">Aucun agent n'a encore été assigné à des dossiers.</p>
+      </ng-template>
+    </div>
+
+  </div>
+
+  <!-- Recent claims -->
+  <div class="recent-claims-section" *ngIf="stats">
+    <div class="section-header-flex">
+      <div>
+        <h2>Dernières Réclamations</h2>
+        <p class="section-subtitle">Vos plus récents dossiers soumis</p>
+      </div>
+      <a routerLink="/reclamations" class="btn-glass-secondary">
+        Voir tout &rarr;
+      </a>
+    </div>
+
+    <div class="glass-table-container" *ngIf="stats.recentReclamations.length > 0; else noRecentTpl">
+      <table class="glass-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Titre</th>
+            <th>Catégorie</th>
+            <th>Date de dépôt</th>
+            <th>Priorité</th>
+            <th>Statut</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let claim of stats.recentReclamations" class="glass-tr">
+            <td class="id-cell">#{{ claim.id }}</td>
+            <td class="font-semibold title-cell">{{ claim.titre }}</td>
+            <td>{{ claim.categorieNom || 'N/A' }}</td>
+            <td>{{ claim.dateCreation | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>
+              <span class="badge-3d" [ngClass]="{
+                'badge-faible': claim.priorite === 'FAIBLE',
+                'badge-moyenne': claim.priorite === 'MOYENNE',
+                'badge-elevee': claim.priorite === 'ELEVEE',
+                'badge-critique': claim.priorite === 'CRITIQUE'
+              }">{{ claim.priorite }}</span>
+            </td>
+            <td>
+              <span class="badge-3d" [ngClass]="{
+                'badge-nouvelle': claim.statut === 'NOUVELLE',
+                'badge-encours': claim.statut === 'EN_COURS',
+                'badge-resolue': claim.statut === 'RESOLUE',
+                'badge-rejetee': claim.statut === 'REJETEE'
+              }">
+                <span class="status-dot"></span>
+                {{ claim.statut.replace('_', ' ') }}
+              </span>
+            </td>
+            <td>
+              <a [routerLink]="['/reclamations', claim.id]" class="action-btn-glass">
+                <span class="material-icons">visibility</span> Détails
+              </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #noRecentTpl>
+      <div class="glass-card empty-state">
+        <span class="material-icons empty-icon">assignment_late</span>
+        <p>Aucune réclamation enregistrée pour le moment.</p>
+        <a routerLink="/reclamations/nouvelle" class="btn-hero-action mt-2">
+          Déposer une réclamation
+        </a>
+      </div>
+    </ng-template>
+  </div>
+
+</div>
+
+<!-- AI Chatbot Floating Window -->
+<div class="chatbot-floating" *ngIf="currentUser && currentUser.role !== 'CLIENT'">
+  <button class="chatbot-fab" (click)="toggleChat()" aria-label="Ouvrir l'assistant IA">
+    <span class="material-icons">smart_toy</span>
+  </button>
+
+  <div class="chatbot-window-glass" *ngIf="isChatOpen">
+    <div class="chatbot-header-row">
+      <div class="chat-header-info">
+        <div class="chat-avatar-header">
+          <span class="material-icons">smart_toy</span>
+          <span class="online-indicator"></span>
+        </div>
+        <div>
+          <h3 class="chat-title">Assistant IA BCT</h3>
+          <span class="chat-sub">Analyse intelligente en direct</span>
+        </div>
+      </div>
+      <button class="chatbot-close-btn" (click)="toggleChat()" aria-label="Fermer l'assistant IA">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="chatbot-messages">
+      <div class="chat-message" *ngFor="let message of chatMessages" [ngClass]="message.role">
+        <div class="chat-avatar">
+          <span class="material-icons">{{ message.role === 'user' ? 'person' : 'smart_toy' }}</span>
+        </div>
+        <div class="chat-bubble">
+          {{ message.text }}
+        </div>
+      </div>
+
+      <div class="chat-loading-indicator" *ngIf="chatbotLoading">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>
+
+    <!-- Quick Prompt Chips -->
+    <div class="chat-quick-chips">
+      <button type="button" class="chip-btn" *ngFor="let q of quickQuestions" (click)="sendQuickQuestion(q)">
+        ⚡ {{ q }}
+      </button>
+    </div>
+
+    <!-- Sleek Chatbot Text Input Zone -->
+    <div class="chatbot-input-zone">
+      <div class="chatbot-input-wrapper">
+        <span class="material-icons input-sparkle">auto_awesome</span>
+        <input type="text" [(ngModel)]="chatbotQuestion" placeholder="Posez une question sur les réclamations..."
+          class="chatbot-input-field" (keydown.enter)="askChatbot()" />
+        <button type="button" class="chatbot-send-btn" (click)="askChatbot()"
+          [disabled]="chatbotLoading || !chatbotQuestion.trim()" title="Envoyer le message">
+          <span class="material-icons">send</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-wrapper">
+    <span class="material-icons spin loading-icon">sync</span>
+    <p>Chargement de votre espace client...</p>
+  </div>
+</ng-template>

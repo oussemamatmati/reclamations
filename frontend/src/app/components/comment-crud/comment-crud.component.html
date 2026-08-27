@@ -1,0 +1,76 @@
+<div class="page-wrapper">
+  <div class="page-header">
+    <div>
+      <h1>Gestion des Commentaires</h1>
+      <p class="subtitle">{{ filteredComments.length }} commentaire(s) trouvé(s)</p>
+    </div>
+  </div>
+
+  <div class="alert alert-success" *ngIf="successMessage">
+    <span class="material-icons">check_circle</span> {{ successMessage }}
+  </div>
+  <div class="alert alert-danger" *ngIf="errorMessage">
+    <span class="material-icons">error</span> {{ errorMessage }}
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-bar card">
+    <div class="filter-group">
+      <span class="material-icons search-icon">search</span>
+      <input type="text" class="search-input"
+             placeholder="Rechercher par contenu, auteur ou ID réclamation..."
+             [(ngModel)]="searchTerm"
+             (input)="applyFilters()">
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-wrapper" *ngIf="isLoading">
+    <span class="material-icons spin">sync</span> Chargement...
+  </div>
+
+  <!-- Comments Table -->
+  <div class="table-container" *ngIf="!isLoading">
+    <table>
+      <thead>
+        <tr>
+          <th>#ID</th>
+          <th>Réclamation</th>
+          <th>Auteur</th>
+          <th>Rôle</th>
+          <th>Date</th>
+          <th>Contenu</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of filteredComments">
+          <td class="cell-id">#{{ c.id }}</td>
+          <td>
+            <a [routerLink]="['/reclamations', c.reclamationId]" class="claim-link">
+              Réclamation #{{ c.reclamationId }}
+            </a>
+          </td>
+          <td class="cell-name">
+            {{ c.agentPrenom || '—' }} {{ c.agentNom || '' }}
+          </td>
+          <td>
+            <span class="role-badge" [ngClass]="getRoleBadgeClass(c.agentRole)">
+              {{ c.agentRole || 'N/A' }}
+            </span>
+          </td>
+          <td class="cell-date">{{ c.dateCommentaire | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td class="cell-content">{{ c.contenu }}</td>
+          <td>
+            <button class="btn-icon btn-delete" (click)="deleteComment(c.id)" title="Supprimer">
+              <span class="material-icons">delete</span>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="filteredComments.length === 0">
+          <td colspan="7" class="no-data-row">Aucun commentaire trouvé.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

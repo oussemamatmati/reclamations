@@ -1,0 +1,197 @@
+<!-- Success Confirmation Screen -->
+<div class="success-screen animate-fade-in" *ngIf="showSuccessScreen">
+  <div class="success-glow-ring">
+    <span class="material-icons success-check-icon">check_circle</span>
+  </div>
+  <h1 class="success-title">Dossier Déposé avec Succès !</h1>
+  <p class="success-subtitle">Votre réclamation a été officiellement transmise à la Banque Centrale de Tunisie.</p>
+
+  <div class="success-ref-card">
+    <div class="ref-row">
+      <span class="material-icons ref-icon">tag</span>
+      <div>
+        <span class="ref-label">Référence BCT</span>
+        <span class="ref-value">BCT-{{ createdClaimId ? (createdClaimId | number:'6.0-0') : '------' }}</span>
+      </div>
+    </div>
+    <div class="ref-row">
+      <span class="material-icons ref-icon">calendar_today</span>
+      <div>
+        <span class="ref-label">Date de soumission</span>
+        <span class="ref-value">{{ createdAt }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="success-next-steps">
+    <h3>📋 Prochaines Étapes</h3>
+    <ul>
+      <li><span class="material-icons step-li-icon">notifications_active</span> Un agent BCT analysera votre dossier sous <strong>48h ouvrées</strong>.</li>
+      <li><span class="material-icons step-li-icon">chat</span> Vous pouvez enrichir votre dossier via la section <strong>Commentaires</strong>.</li>
+      <li><span class="material-icons step-li-icon">picture_as_pdf</span> Téléchargez votre <strong>Attestation de Dépôt</strong> depuis le détail du dossier.</li>
+    </ul>
+  </div>
+
+  <div class="success-actions">
+    <button class="btn-view-claim" (click)="goToClaimDetail()">
+      <span class="material-icons">visibility</span>
+      Voir mon dossier
+    </button>
+    <button class="btn-new-claim" (click)="resetForm()">
+      <span class="material-icons">add_circle</span>
+      Déposer une autre réclamation
+    </button>
+  </div>
+</div>
+
+<!-- Main Form (hidden when success screen is shown) -->
+<div class="create-page-container animate-fade-in" *ngIf="!showSuccessScreen">
+
+  <!-- Header -->
+  <div class="create-header">
+    <a routerLink="/reclamations" class="back-btn-glass">
+      <span class="material-icons">arrow_back</span> Retour
+    </a>
+    <div>
+      <h1 class="page-title">Déposer une Réclamation</h1>
+      <p class="page-subtitle">Formulaire officiel de transmission de dossier auprès de la Banque Centrale de Tunisie</p>
+    </div>
+  </div>
+
+  <!-- Form Wizard Glass Card -->
+  <div class="glass-card create-wizard-card">
+
+    <!-- Visual Step Tracker -->
+    <div class="wizard-stepper">
+      <div class="step-item active">
+        <div class="step-circle">1</div>
+        <span class="step-title">Objet &amp; Catégorie</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step-item active">
+        <div class="step-circle">2</div>
+        <span class="step-title">Gravité &amp; Description</span>
+      </div>
+      <div class="step-line"></div>
+      <div class="step-item">
+        <div class="step-circle">3</div>
+        <span class="step-title">Validation BCT</span>
+      </div>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #createForm="ngForm" class="create-form">
+
+      <div class="alert alert-danger animate-fade-in" *ngIf="errorMessage">
+        <span class="material-icons alert-icon">error_outline</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <!-- Section 1: Objet -->
+      <div class="form-section">
+        <label for="titre" class="form-section-label">1. Objet de la réclamation *</label>
+        <div class="input-wrapper-3d">
+          <span class="material-icons input-icon">subject</span>
+          <input
+            type="text"
+            id="titre"
+            name="titre"
+            class="form-control-3d"
+            placeholder="Ex: Erreur de virement, carte bloquée au distributeur, frais inattendus..."
+            [(ngModel)]="titre"
+            required>
+        </div>
+      </div>
+
+      <!-- Section 2: Interactive Category Selector -->
+      <div class="form-section">
+        <label class="form-section-label">2. Catégorie du problème *</label>
+        <div class="category-cards-grid">
+          <div
+            class="category-select-card"
+            *ngFor="let cat of categories"
+            [class.selected]="categorieId === cat.id"
+            (click)="selectCategory(cat.id)">
+
+            <div class="cat-card-icon">
+              <span class="material-icons">{{ getCategoryIcon(cat.nom) }}</span>
+            </div>
+            <span class="cat-card-name">{{ cat.nom }}</span>
+            <div class="select-check" *ngIf="categorieId === cat.id">
+              <span class="material-icons">check_circle</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Priority Selector -->
+      <div class="form-section">
+        <label class="form-section-label">3. Niveau d'urgence estimé</label>
+        <div class="priority-pills-selector">
+          <button
+            type="button"
+            class="prio-pill faible"
+            [class.active]="priorite === 'FAIBLE'"
+            (click)="selectPriority('FAIBLE')">
+            <span class="material-icons">info</span>
+            Faible
+          </button>
+
+          <button
+            type="button"
+            class="prio-pill moyenne"
+            [class.active]="priorite === 'MOYENNE'"
+            (click)="selectPriority('MOYENNE')">
+            <span class="material-icons">report_problem</span>
+            Moyenne
+          </button>
+
+          <button
+            type="button"
+            class="prio-pill elevee"
+            [class.active]="priorite === 'ELEVEE'"
+            (click)="selectPriority('ELEVEE')">
+            <span class="material-icons">warning</span>
+            Élevée
+          </button>
+
+          <button
+            type="button"
+            class="prio-pill critique"
+            [class.active]="priorite === 'CRITIQUE'"
+            (click)="selectPriority('CRITIQUE')">
+            <span class="material-icons">gavel</span>
+            Critique (Fraude)
+          </button>
+        </div>
+      </div>
+
+      <!-- Section 4: Detailed Description -->
+      <div class="form-section">
+        <label for="description" class="form-section-label">4. Description détaillée du problème *</label>
+        <textarea
+          id="description"
+          name="description"
+          class="form-control-3d textarea"
+          rows="6"
+          placeholder="Renseignez les détails nécessaires (date de l'opération, montant, banque concernée, numéros de compte ou références des pièces jointes)..."
+          [(ngModel)]="description"
+          required></textarea>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions-flex">
+        <a routerLink="/reclamations" class="btn-cancel-glass">Annuler</a>
+        <button type="submit" class="btn-submit-3d" [disabled]="isLoading">
+          <span class="btn-shimmer"></span>
+          <span class="btn-content">
+            <span class="material-icons spin" *ngIf="isLoading">sync</span>
+            <span *ngIf="!isLoading">Soumettre le dossier à la BCT</span>
+            <span *ngIf="!isLoading" class="material-icons arrow-icon">arrow_forward</span>
+            <span *ngIf="isLoading">Transmission...</span>
+          </span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>

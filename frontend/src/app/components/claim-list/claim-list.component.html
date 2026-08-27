@@ -1,0 +1,266 @@
+<div class="claims-page-container animate-fade-in">
+  
+  <!-- Page Header -->
+  <div class="list-header-flex">
+    <div>
+      <h1 class="page-title">
+        <span *ngIf="currentUser?.role === 'CLIENT'">Mes Réclamations</span>
+        <span *ngIf="currentUser?.role === 'AGENT'">Dossiers Assignés</span>
+        <span *ngIf="currentUser?.role === 'ADMIN'">Toutes les Réclamations</span>
+      </h1>
+      <p class="page-subtitle">Consultez, recherchez et suivez l'état d'avancement des dossiers bancaires BCT</p>
+    </div>
+
+    <div class="header-right-actions">
+      <!-- View Mode Switcher -->
+      <div class="view-mode-toggle">
+        <button 
+          class="toggle-btn" 
+          [class.active]="viewMode === 'grid'" 
+          (click)="toggleViewMode('grid')" 
+          title="Vue Cartes 3D">
+          <span class="material-icons">grid_view</span>
+          <span class="btn-text-desktop">Cartes 3D</span>
+        </button>
+        <button 
+          class="toggle-btn" 
+          [class.active]="viewMode === 'table'" 
+          (click)="toggleViewMode('table')" 
+          title="Vue Tableau">
+          <span class="material-icons">view_list</span>
+          <span class="btn-text-desktop">Tableau</span>
+        </button>
+      </div>
+
+      <div *ngIf="currentUser?.role === 'CLIENT'">
+        <a routerLink="/reclamations/nouvelle" class="btn-primary-action">
+          <span class="material-icons">add_circle</span> Déposer une Réclamation
+        </a>
+      </div>
+
+      <div *ngIf="currentUser?.role !== 'CLIENT'">
+        <button class="btn-glass-secondary" (click)="exportPdf()">
+          <span class="material-icons">download</span> Exporter PDF
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="errorMessage">
+    <span class="material-icons">error_outline</span>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <!-- Filters panel -->
+  <div class="glass-card filter-card">
+    <div class="filter-grid">
+      <div class="form-group search-group">
+        <label for="search">Rechercher</label>
+        <div class="input-with-icon-glass">
+          <span class="material-icons input-icon">search</span>
+          <input 
+            type="text" 
+            id="search" 
+            class="form-control-glass" 
+            placeholder="Rechercher par ID, titre, description..." 
+            [(ngModel)]="searchTerm" 
+            (ngModelChange)="applyFilters()">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="status">Statut</label>
+        <select id="status" class="form-control-glass" [(ngModel)]="statusFilter" (change)="applyFilters()">
+          <option value="">Tous les statuts</option>
+          <option value="NOUVELLE">Nouvelle</option>
+          <option value="EN_COURS">En Cours</option>
+          <option value="RESOLUE">Résolue</option>
+          <option value="REJETEE">Rejetée</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="priority">Priorité</label>
+        <select id="priority" class="form-control-glass" [(ngModel)]="priorityFilter" (change)="applyFilters()">
+          <option value="">Toutes les priorités</option>
+          <option value="FAIBLE">Faible</option>
+          <option value="MOYENNE">Moyenne</option>
+          <option value="ELEVEE">Élevée</option>
+          <option value="CRITIQUE">Critique</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="startDateFilter">Date Début</label>
+        <input 
+          type="date" 
+          id="startDateFilter" 
+          class="form-control-glass" 
+          [(ngModel)]="startDateFilter" 
+          (change)="applyFilters()">
+      </div>
+
+      <div class="form-group">
+        <label for="endDateFilter">Date Fin</label>
+        <input 
+          type="date" 
+          id="endDateFilter" 
+          class="form-control-glass" 
+          [(ngModel)]="endDateFilter" 
+          (change)="applyFilters()">
+      </div>
+
+      <div class="filter-actions-wrapper">
+        <button class="btn-reset-glass" (click)="resetFilters()" title="Réinitialiser tous les filtres">
+          <span class="material-icons">filter_alt_off</span> Réinitialiser
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-wrapper" *ngIf="isLoading">
+    <span class="material-icons spin loading-icon">sync</span>
+    <p>Chargement des réclamations...</p>
+  </div>
+
+  <!-- Claims Display -->
+  <div *ngIf="!isLoading">
+
+    <!-- 1. GRID 3D VIEW MODE -->
+    <div *ngIf="viewMode === 'grid'">
+      <div class="claims-grid-3d" *ngIf="filteredClaims.length > 0; else emptyTpl">
+        <div 
+          class="claim-card-3d" 
+          *ngFor="let claim of filteredClaims"
+          [style.transform]="cardTransforms[claim.id || 0] || 'perspective(1000px) rotateX(0deg) rotateY(0deg)'"
+          (mousemove)="onCardMouseMove($event, claim.id)"
+          (mouseleave)="onCardMouseLeave(claim.id)">
+          
+          <div class="claim-card-top">
+            <span class="claim-id-pill">#{{ claim.id }}</span>
+            <span class="badge-3d" [ngClass]="{
+              'badge-nouvelle': claim.statut === 'NOUVELLE',
+              'badge-encours': claim.statut === 'EN_COURS',
+              'badge-resolue': claim.statut === 'RESOLUE',
+              'badge-rejetee': claim.statut === 'REJETEE'
+            }">
+              <span class="status-dot"></span>
+              {{ claim.statut.replace('_', ' ') }}
+            </span>
+          </div>
+
+          <h3 class="claim-card-title">{{ claim.titre }}</h3>
+
+          <p class="claim-card-snippet">
+            {{ claim.description | slice:0:110 }}{{ claim.description.length > 110 ? '...' : '' }}
+          </p>
+
+          <div class="claim-card-tags">
+            <span class="category-tag">
+              <span class="material-icons tag-icon">folder</span>
+              {{ claim.categorieNom || 'N/A' }}
+            </span>
+            <span class="priority-badge-pill" [ngClass]="{
+              'badge-faible': claim.priorite === 'FAIBLE',
+              'badge-moyenne': claim.priorite === 'MOYENNE',
+              'badge-elevee': claim.priorite === 'ELEVEE',
+              'badge-critique': claim.priorite === 'CRITIQUE'
+            }">{{ claim.priorite }}</span>
+          </div>
+
+          <div class="claim-card-footer">
+            <span class="claim-date">
+              <span class="material-icons date-icon">event</span>
+              {{ claim.dateCreation | date:'dd/MM/yyyy' }}
+            </span>
+            <a [routerLink]="['/reclamations', claim.id]" class="claim-detail-btn">
+              Détails &rarr;
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. TABLE VIEW MODE -->
+    <div *ngIf="viewMode === 'table'">
+      <div class="glass-table-container" *ngIf="filteredClaims.length > 0; else emptyTpl">
+        <table class="glass-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Titre</th>
+              <th>Catégorie</th>
+              <th *ngIf="currentUser?.role !== 'CLIENT'">Client</th>
+              <th *ngIf="currentUser?.role === 'ADMIN'">Agent Assigné</th>
+              <th>Date de dépôt</th>
+              <th>Priorité</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let claim of filteredClaims" class="glass-tr">
+              <td class="id-cell">#{{ claim.id }}</td>
+              <td class="font-semibold title-cell">{{ claim.titre }}</td>
+              <td>{{ claim.categorieNom || 'N/A' }}</td>
+              <td *ngIf="currentUser?.role !== 'CLIENT'">
+                <div class="user-cell">
+                  <span class="cell-name">{{ claim.clientPrenom }} {{ claim.clientNom }}</span>
+                  <span class="cell-sub">{{ claim.clientEmail }}</span>
+                </div>
+              </td>
+              <td *ngIf="currentUser?.role === 'ADMIN'">
+                <div class="agent-cell" *ngIf="claim.agentId; else unassignedTpl">
+                  <span class="material-icons agent-cell-icon">support_agent</span>
+                  <span>{{ claim.agentPrenom }} {{ claim.agentNom }}</span>
+                </div>
+                <ng-template #unassignedTpl>
+                  <span class="unassigned-text">Non Assigné</span>
+                </ng-template>
+              </td>
+              <td>{{ claim.dateCreation | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td>
+                <span class="badge-3d" [ngClass]="{
+                  'badge-faible': claim.priorite === 'FAIBLE',
+                  'badge-moyenne': claim.priorite === 'MOYENNE',
+                  'badge-elevee': claim.priorite === 'ELEVEE',
+                  'badge-critique': claim.priorite === 'CRITIQUE'
+                }">{{ claim.priorite }}</span>
+              </td>
+              <td>
+                <span class="badge-3d" [ngClass]="{
+                  'badge-nouvelle': claim.statut === 'NOUVELLE',
+                  'badge-encours': claim.statut === 'EN_COURS',
+                  'badge-resolue': claim.statut === 'RESOLUE',
+                  'badge-rejetee': claim.statut === 'REJETEE'
+                }">
+                  <span class="status-dot"></span>
+                  {{ claim.statut.replace('_', ' ') }}
+                </span>
+              </td>
+              <td>
+                <a [routerLink]="['/reclamations', claim.id]" class="action-btn-glass">
+                  <span class="material-icons">visibility</span> Voir
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <ng-template #emptyTpl>
+      <div class="glass-card empty-state">
+        <span class="material-icons empty-icon">sentiment_dissatisfied</span>
+        <h3>Aucune réclamation trouvée</h3>
+        <p>Essayez de modifier vos filtres ou de créer un nouveau dossier.</p>
+        <button class="btn-reset-glass mt-2" (click)="resetFilters()">
+          Réinitialiser les filtres
+        </button>
+      </div>
+    </ng-template>
+  </div>
+
+</div>

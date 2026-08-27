@@ -1,0 +1,22 @@
+<!-- ADMIN layout: sidebar + content -->
+<ng-container *ngIf="isLoggedIn && isAdmin">
+  <div class="admin-layout">
+    <app-sidebar></app-sidebar>
+    <main class="admin-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</ng-container>
+
+<!-- CLIENT / AGENT layout: top navbar + content -->
+<ng-container *ngIf="isLoggedIn && !isAdmin">
+  <app-navbar></app-navbar>
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</ng-container>
+
+<!-- Not logged in: just the router outlet (login/register pages) -->
+<ng-container *ngIf="!isLoggedIn">
+  <router-outlet></router-outlet>
+</ng-container>
